@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<body>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript">
+wg = (function () {
+
+var context,
+    that = {};
+
+that.setCanvas = function (canvas) {
+  var names = ["webgl", "experimental-webgl"];
+  for (var i=0; i < names.length; i++) {
+    try {
+      context = canvas.getContext(names[i]);
+    } catch(e) {}
+    if (context) {
+      break;
+    }
+  }
+  if (context) {
+    context.viewportWidth = canvas.width;
+    context.viewportHeight = canvas.height;
+  } else {
+    alert("Failed to create WebGL context!");
+  }
+}
+
+that.setupShaders = function () {
+  var vertexShaderSource =
+    "attribute vec3 aVertexPosition; \n" +
+    "void main() { \n" +
+    "  gl_position = vec4 (aVertexPosition, 1.0); \n" +
+    "} \n";
+  var fragmentShaderSource =
+    "precision mediump float; \n" +
+    "void main() { \n" +
+    "  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \n" +
+    "} \n"
+
+  var vertexShader = loadShader(context.VERTEX_SHADER, vertexShaderSource);
+  var fragmentShader = loadShader(context.FRAGMENT_SHADER, fragmentShaderSource);
+
+  shaderProgram = context.createProgram();
+  context.attachShader(shaderProgram, vertexShader);
+  context.attachShader(shaderProgram, fragmentShader);
+  context.linkProgram(shaderProgram);
+
+  if (!context.getProgramParameter(shaderProgram, context.LINK_STATUS)) {
+    alert("Failed to setup shaders");
+  }
+
+  context.useProgram(shaderProgram);
+
+  shaderProgram.vertexPositionAttribute =
+    context.getAttribLocation(shaderProgram, "aVertexPosition");
+}
+
+that.setupBuffers = function () {
+  vertexBuffer = context.createBuffer();
+  context.bindBuffer(context.ARRAY_BUFFER, vertexBuffer);
+  var triangleVertices = [
+    0.0,  0.5,  0.0,
+   -0.5, -0.5,  0.0,
+    0.5, -0.5,  0.0
+  ];
+  context.bufferData(context.ARRAY_BUFFER, new Float32Array(triangleVertices),
+                context.STATIC_DRAW);
+  vertexBuffer.itemSize = 3;
+  vertexBuffer.numberOfItems = 3;
+}
+
+that.clearColor = function () {
+  context.clearColor(0.0, 0.0, 0.0, 1.0);
+}
+
+that.draw = function () {
+  context.viewport(0, 0, context.viewportWidth, context.viewportHeight);
+  context.clear(context.COLOR_BUFFER_BIT);
+
+  context.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+                              vertexBuffer.itemSize, context.FLOAT, false, 0, 0);
+  context.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+  context.drawArrays(context.TRIANGLES, 0, vertexBuffer.numberOfItems);
+}
+
+return that;
+
+})();
+
+window.onload = function () {
+  wg.setCanvas(document.getElementById("myGLCanvas"));
+  wg.setupShaders();
+  wg.setupBuffers();
+  wg.clearColor();
+  wg.draw();
+}
+</script>
+</head>
+<body>
+
+<canvas id="myGLCanvas" width="500" height="500"></canvas>
+
+</body>
+</body>
