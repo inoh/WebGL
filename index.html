@@ -26,11 +26,24 @@ that.setCanvas = function (canvas) {
   }
 }
 
+that.loadShader = function (type, shaderSource) {
+  var shader = context.createShader(type);
+  context.shaderSource(shader, shaderSource);
+  context.compileShader(shader);
+
+  if (!context.getShaderParameter(shader, context.COMPILE_STATUS)) {
+    alert ("Error compiling shader" + context.getShaderInfoLog(shader));
+    context.deleteShader(shader);
+    return null;
+  }
+  return shader;
+}
+
 that.setupShaders = function () {
   var vertexShaderSource =
     "attribute vec3 aVertexPosition; \n" +
     "void main() { \n" +
-    "  gl_position = vec4 (aVertexPosition, 1.0); \n" +
+    "  gl_Position = vec4 (aVertexPosition, 1.0); \n" +
     "} \n";
   var fragmentShaderSource =
     "precision mediump float; \n" +
@@ -38,8 +51,8 @@ that.setupShaders = function () {
     "  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); \n" +
     "} \n"
 
-  var vertexShader = loadShader(context.VERTEX_SHADER, vertexShaderSource);
-  var fragmentShader = loadShader(context.FRAGMENT_SHADER, fragmentShaderSource);
+  var vertexShader = this.loadShader(context.VERTEX_SHADER, vertexShaderSource);
+  var fragmentShader = this.loadShader(context.FRAGMENT_SHADER, fragmentShaderSource);
 
   shaderProgram = context.createProgram();
   context.attachShader(shaderProgram, vertexShader);
